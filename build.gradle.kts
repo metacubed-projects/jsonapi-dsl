@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     base
-    kotlin("jvm") version "1.2.21" apply false
+    kotlin("jvm") version "1.2.70" apply false
 }
 
 allprojects {
@@ -12,7 +12,7 @@ allprojects {
 
     tasks {
         withType<Wrapper> {
-            gradleVersion = "4.9"
+            gradleVersion = "4.10.1"
         }
         withType<KotlinCompile> {
             kotlinOptions {
