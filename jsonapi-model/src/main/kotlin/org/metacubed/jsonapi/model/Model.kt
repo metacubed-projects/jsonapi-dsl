@@ -1,4 +1,4 @@
-package org.metacubed.jsonapi.dsl
+package org.metacubed.jsonapi.model
 
 import java.net.URI
 

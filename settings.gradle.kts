@@ -1,3 +1,5 @@
-rootProject.name = "json-api-lite"
+rootProject.name = "jsonapi-lite"
 
-include("json-api-lite-dsl")
+include("jsonapi-model", "jsonapi-builder")
+
+enableFeaturePreview("STABLE_PUBLISHING")

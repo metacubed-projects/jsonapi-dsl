@@ -1,5 +1,12 @@
-package org.metacubed.jsonapi.dsl
+package org.metacubed.jsonapi.builder
 
+import org.metacubed.jsonapi.model.Document
+import org.metacubed.jsonapi.model.Error
+import org.metacubed.jsonapi.model.ErrorDocument
+import org.metacubed.jsonapi.model.Links
+import org.metacubed.jsonapi.model.MultiResourceDocument
+import org.metacubed.jsonapi.model.Resource
+import org.metacubed.jsonapi.model.SingleResourceDocument
 import java.net.URI
 
 @DslMarker
@@ -36,7 +43,7 @@ typealias SingleResourceDocumentPopulator<T> = SingleResourceDocumentBuilder<T>.
 
 @JsonApiDsl
 class MultiResourceDocumentBuilder<T : Any> internal constructor() :
-    MultiResourceDocument<T> {
+        MultiResourceDocument<T> {
 
     override val data = ResourceListBuilder<T>()
     override val errors: ErrorListBuilder? = null

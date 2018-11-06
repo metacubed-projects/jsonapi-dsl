@@ -1,9 +1,9 @@
-package org.metacubed.jsonapi.dsl
+package org.metacubed.jsonapi.builder
 
 import org.junit.jupiter.api.Test
 import java.net.URI
 
-class JsonApiDslBuilderTest {
+class DslTest {
 
     @Test
     fun testSingleResourceDocument() {

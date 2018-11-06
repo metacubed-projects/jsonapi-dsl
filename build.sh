@@ -1,3 +1,3 @@
 #!/usr/bin/env sh -e -o pipefail
 
-gradle wrapper && ./gradlew clean build
+gradle --console=verbose wrapper && echo && ./gradlew --console=verbose clean build
