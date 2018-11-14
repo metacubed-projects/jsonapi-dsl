@@ -22,7 +22,7 @@ interface Resource<T : Any> {
     val type: String
     val id: String
     val attributes: T?
-    val meta: Map<String, Any>?
+    val meta: Meta?
     val links: Links?
 }
 
@@ -38,3 +38,5 @@ interface Links {
     val next: URI?
     val last: URI?
 }
+
+typealias Meta = Map<String, Any>

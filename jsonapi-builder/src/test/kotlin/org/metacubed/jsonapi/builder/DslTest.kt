@@ -17,10 +17,10 @@ class DslTest {
                         property1 = "test1",
                         property2 = 42
                     )
-                    meta = mapOf(
-                        "createdOn" to Instant.now(),
-                        "updatedOn" to Instant.now()
-                    )
+                    meta {
+                        "createdOn" *= Instant.now()
+                        "updatedOn" *= Instant.now()
+                    }
                     links {
                         self = URI("https://example.com/payloads/id1")
                     }
@@ -43,10 +43,10 @@ class DslTest {
                         property1 = "test1",
                         property2 = 42
                     )
-                    meta = mapOf(
-                        "createdOn" to Instant.now(),
-                        "updatedOn" to Instant.now()
-                    )
+                    meta {
+                        "createdOn" *= Instant.now()
+                        "updatedOn" *= Instant.now()
+                    }
                     links {
                         self = URI("https://example.com/payloads/id1")
                     }
@@ -57,10 +57,10 @@ class DslTest {
                         property1 = "test2",
                         property2 = 42
                     )
-                    meta = mapOf(
-                        "createdOn" to Instant.now(),
-                        "updatedOn" to Instant.now()
-                    )
+                    meta {
+                        "createdOn" *= Instant.now()
+                        "updatedOn" *= Instant.now()
+                    }
                     links {
                         self = URI("https://example.com/payloads/id2")
                     }

@@ -4,6 +4,7 @@ import org.metacubed.jsonapi.model.Document
 import org.metacubed.jsonapi.model.Error
 import org.metacubed.jsonapi.model.ErrorDocument
 import org.metacubed.jsonapi.model.Links
+import org.metacubed.jsonapi.model.Meta
 import org.metacubed.jsonapi.model.MultiResourceDocument
 import org.metacubed.jsonapi.model.Resource
 import org.metacubed.jsonapi.model.SingleResourceDocument
@@ -92,9 +93,14 @@ class MutableResource<T : Any> internal constructor(type: KClass<T>) : Resource<
     override val type: String = type.java.simpleName.decapitalize()
     override lateinit var id: String
     override var attributes: T? = null
-    override var meta: Map<String, Any>? = null
+    override var meta: MutableMeta? = null
+        private set
     override var links: MutableLinks? = null
         private set
+
+    fun meta(populator: MetaPopulator) {
+        meta = (meta ?: MutableMeta()).apply(populator)
+    }
 
     fun links(populator: LinksPopulator) {
         links = (links ?: MutableLinks()).apply(populator)
@@ -123,6 +129,19 @@ class MutableLinks internal constructor() : Links {
 }
 
 private typealias LinksPopulator = MutableLinks.() -> Unit
+
+@JsonApiDsl
+class MutableMeta internal constructor() : MutableMap<String, Any> by mutableMapOf(), Meta {
+
+    operator fun String.timesAssign(value: Any?) {
+        when (value) {
+            null -> remove(this)
+            else -> put(this, value)
+        }
+    }
+}
+
+private typealias MetaPopulator = MutableMeta.() -> Unit
 
 @DslMarker
 private annotation class JsonApiDsl
