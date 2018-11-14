@@ -8,111 +8,111 @@ import org.metacubed.jsonapi.model.MultiResourceDocument
 import org.metacubed.jsonapi.model.Resource
 import org.metacubed.jsonapi.model.SingleResourceDocument
 import java.net.URI
-
-@DslMarker
-annotation class JsonApiDsl
+import kotlin.reflect.KClass
 
 @JsonApiDsl
-val jsonApi = DocumentBuilder()
+val jsonApi = DocumentRoot()
 
 @JsonApiDsl
-class DocumentBuilder internal constructor() {
+class DocumentRoot internal constructor() {
 
-    fun <T : Any> single(populator: SingleResourceDocumentPopulator<T>): SingleResourceDocument<T> =
-        SingleResourceDocumentBuilder<T>().apply(populator)
+    inline operator fun <TDocument : Document> invoke(populator: DocumentRoot.() -> TDocument) = populator()
 
-    fun <T : Any> multi(populator: MultiResourceDocumentPopulator<T>): MultiResourceDocument<T> =
-        MultiResourceDocumentBuilder<T>().apply(populator)
+    inline fun <reified T : Any> singleResourceDocument(noinline populator: SingleResourceDocumentPopulator<T>):
+        SingleResourceDocument<T> = singleResourceDocument(T::class, populator)
 
-    fun error(populator: ErrorDocumentPopulator): ErrorDocument =
-        ErrorDocumentBuilder().apply(populator)
+    inline fun <reified T : Any> multiResourceDocument(noinline populator: MultiResourceDocumentPopulator<T>):
+        MultiResourceDocument<T> = multiResourceDocument(T::class, populator)
 
-    inline operator fun <TDocument : Document<*>> invoke(populator: DocumentBuilder.() -> TDocument) = populator()
+    fun <T : Any> singleResourceDocument(type: KClass<T>, populator: SingleResourceDocumentPopulator<T>):
+        SingleResourceDocument<T> = MutableSingleResourceDocument(type).apply(populator)
+
+    fun <T : Any> multiResourceDocument(type: KClass<T>, populator: MultiResourceDocumentPopulator<T>):
+        MultiResourceDocument<T> = MutableMultiResourceDocument(type).apply(populator)
+
+    fun errorDocument(populator: ErrorDocumentPopulator):
+        ErrorDocument = MutableErrorDocument().apply(populator)
 }
 
 @JsonApiDsl
-class SingleResourceDocumentBuilder<T : Any> internal constructor() :
-    SingleResourceDocument<T> {
+class MutableSingleResourceDocument<T : Any> internal constructor(
+    private val type: KClass<T>
+) : MutableDocument(), SingleResourceDocument<T> {
 
-    override val data = ResourceBuilder<T>()
-    override val errors: ErrorListBuilder? = null
-    override val links = LinksBuilder()
-}
+    override var data: MutableResource<T>? = null
+        private set
 
-typealias SingleResourceDocumentPopulator<T> = SingleResourceDocumentBuilder<T>.() -> Unit
-
-@JsonApiDsl
-class MultiResourceDocumentBuilder<T : Any> internal constructor() :
-        MultiResourceDocument<T> {
-
-    override val data = ResourceListBuilder<T>()
-    override val errors: ErrorListBuilder? = null
-    override val links = LinksBuilder()
-}
-
-typealias MultiResourceDocumentPopulator<T> = MultiResourceDocumentBuilder<T>.() -> Unit
-
-@JsonApiDsl
-class ErrorDocumentBuilder internal constructor() : ErrorDocument {
-
-    override val data: Unit? = null
-    override val errors = ErrorListBuilder()
-    override val links = LinksBuilder()
-}
-
-typealias ErrorDocumentPopulator = ErrorDocumentBuilder.() -> Unit
-
-@JsonApiDsl
-class ResourceListBuilder<T : Any> internal constructor(
-    private val data: MutableList<ResourceBuilder<T>> = mutableListOf()
-) : MutableList<ResourceBuilder<T>> by data {
-
-    operator fun plusAssign(populator: ResourcePopulator<T>) {
-        add(ResourceBuilder<T>().apply(populator))
+    fun data(populator: ResourcePopulator<T>) {
+        data = MutableResource(type).apply(populator)
     }
 }
 
-@JsonApiDsl
-class ResourceBuilder<T : Any> internal constructor() : Resource<T> {
+private typealias SingleResourceDocumentPopulator<T> = MutableSingleResourceDocument<T>.() -> Unit
 
-    override lateinit var id: String
-    override lateinit var type: String
-    override lateinit var attributes: T
-    override var links: LinksBuilder? = null
+@JsonApiDsl
+class MutableMultiResourceDocument<T : Any> internal constructor(
+    private val type: KClass<T>
+) : MutableDocument(), MultiResourceDocument<T> {
+
+    override val data = mutableListOf<MutableResource<T>>()
+
+    fun data(populator: ResourcePopulator<T>) {
+        data.add(MutableResource(type).apply(populator))
+    }
+}
+
+private typealias MultiResourceDocumentPopulator<T> = MutableMultiResourceDocument<T>.() -> Unit
+
+@JsonApiDsl
+class MutableErrorDocument internal constructor() : MutableDocument(), ErrorDocument {
+
+    override val errors = mutableListOf<MutableError>()
+
+    fun error(populator: ErrorPopulator) {
+        errors.add(MutableError().apply(populator))
+    }
+}
+
+private typealias ErrorDocumentPopulator = MutableErrorDocument.() -> Unit
+
+@JsonApiDsl
+abstract class MutableDocument protected constructor() : Document {
+
+    final override var links: MutableLinks? = null
         private set
-    override var meta: Map<String, Any>? = null
 
     fun links(populator: LinksPopulator) {
-        links = (links ?: LinksBuilder()).apply(populator)
-    }
-
-    operator fun invoke(populator: ResourcePopulator<T>) = populator()
-}
-
-typealias ResourcePopulator<T> = ResourceBuilder<T>.() -> Unit
-
-@JsonApiDsl
-class ErrorListBuilder internal constructor(
-    private val errors: MutableList<ErrorBuilder> = mutableListOf()
-) : MutableList<ErrorBuilder> by errors {
-
-    operator fun plusAssign(populator: ErrorPopulator) {
-        add(ErrorBuilder().apply(populator))
+        links = (links ?: MutableLinks()).apply(populator)
     }
 }
 
 @JsonApiDsl
-class ErrorBuilder internal constructor() : Error {
+class MutableResource<T : Any> internal constructor(type: KClass<T>) : Resource<T> {
 
-    override lateinit var title: String
+    override val type: String = type.java.simpleName.decapitalize()
+    override lateinit var id: String
+    override var attributes: T? = null
+    override var meta: Map<String, Any>? = null
+    override var links: MutableLinks? = null
+        private set
 
-    operator fun invoke(populator: ErrorPopulator) = populator()
+    fun links(populator: LinksPopulator) {
+        links = (links ?: MutableLinks()).apply(populator)
+    }
 }
 
-typealias ErrorPopulator = ErrorBuilder.() -> Unit
+private typealias ResourcePopulator<T> = MutableResource<T>.() -> Unit
 
 @JsonApiDsl
-class LinksBuilder internal constructor() : Links {
+class MutableError internal constructor() : Error {
+
+    override var title: String? = null
+}
+
+private typealias ErrorPopulator = MutableError.() -> Unit
+
+@JsonApiDsl
+class MutableLinks internal constructor() : Links {
 
     override lateinit var self: URI
     override var related: URI? = null
@@ -120,8 +120,9 @@ class LinksBuilder internal constructor() : Links {
     override var prev: URI? = null
     override var next: URI? = null
     override var last: URI? = null
-
-    operator fun invoke(populator: LinksPopulator) = populator()
 }
 
-typealias LinksPopulator = LinksBuilder.() -> Unit
+private typealias LinksPopulator = MutableLinks.() -> Unit
+
+@DslMarker
+private annotation class JsonApiDsl

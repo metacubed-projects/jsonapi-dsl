@@ -2,6 +2,7 @@ package org.metacubed.jsonapi.builder
 
 import org.junit.jupiter.api.Test
 import java.net.URI
+import java.time.Instant
 
 class DslTest {
 
@@ -9,19 +10,23 @@ class DslTest {
     fun testSingleResourceDocument() {
 
         jsonApi {
-            single<Map<String, Int>> {
+            singleResourceDocument<Payload> {
                 data {
                     id = "id1"
-                    type = "type1"
-                    attributes = mapOf(
-                        "the_answer" to 42
+                    attributes = Payload(
+                        property1 = "test1",
+                        property2 = 42
+                    )
+                    meta = mapOf(
+                        "createdOn" to Instant.now(),
+                        "updatedOn" to Instant.now()
                     )
                     links {
-                        self = URI("")
+                        self = URI("https://example.com/payloads/id1")
                     }
                 }
                 links {
-                    self = URI("")
+                    self = URI("https://example.com/payloads/id1")
                 }
             }
         }
@@ -31,19 +36,41 @@ class DslTest {
     fun testMultiResourceDocument() {
 
         jsonApi {
-            multi<Int> {
-                data += {
+            multiResourceDocument<Payload> {
+                data {
                     id = "id1"
-                    type = "type1"
-                    attributes = 42
+                    attributes = Payload(
+                        property1 = "test1",
+                        property2 = 42
+                    )
+                    meta = mapOf(
+                        "createdOn" to Instant.now(),
+                        "updatedOn" to Instant.now()
+                    )
+                    links {
+                        self = URI("https://example.com/payloads/id1")
+                    }
                 }
-                data += {
+                data {
                     id = "id2"
-                    type = "type1"
-                    attributes = 42
+                    attributes = Payload(
+                        property1 = "test2",
+                        property2 = 42
+                    )
+                    meta = mapOf(
+                        "createdOn" to Instant.now(),
+                        "updatedOn" to Instant.now()
+                    )
+                    links {
+                        self = URI("https://example.com/payloads/id2")
+                    }
                 }
                 links {
-                    self = URI("")
+                    self = URI("https://example.com/payloads?page[limit]=2&page[offset]=4")
+                    first = URI("https://example.com/payloads?page[limit]=2&page[offset]=0")
+                    prev = URI("https://example.com/payloads?page[limit]=2&page[offset]=2")
+                    next = URI("https://example.com/payloads?page[limit]=2&page[offset]=6")
+                    last = URI("https://example.com/payloads?page[limit]=2&page[offset]=20")
                 }
             }
         }
@@ -53,14 +80,25 @@ class DslTest {
     fun testErrorDocument() {
 
         jsonApi {
-            error {
-                errors += {
-                    title = "o"
+            errorDocument {
+                error {
+                    title = "Missing element"
+                }
+                error {
+                    title = "Invalid input"
+                }
+                error {
+                    title = "Rate limit reached"
                 }
                 links {
-                    self = URI("")
+                    self = URI("https://example.com/payloads/missing")
                 }
             }
         }
     }
 }
+
+private data class Payload(
+    val property1: String,
+    val property2: Int
+)
