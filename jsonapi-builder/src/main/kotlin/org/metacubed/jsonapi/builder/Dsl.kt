@@ -1,12 +1,15 @@
 package org.metacubed.jsonapi.builder
 
 import org.metacubed.jsonapi.model.Document
+import org.metacubed.jsonapi.model.DocumentLinks
 import org.metacubed.jsonapi.model.Error
 import org.metacubed.jsonapi.model.ErrorDocument
-import org.metacubed.jsonapi.model.Links
+import org.metacubed.jsonapi.model.ErrorLinks
+import org.metacubed.jsonapi.model.ErrorSource
 import org.metacubed.jsonapi.model.Meta
 import org.metacubed.jsonapi.model.MultiResourceDocument
 import org.metacubed.jsonapi.model.Resource
+import org.metacubed.jsonapi.model.ResourceLinks
 import org.metacubed.jsonapi.model.SingleResourceDocument
 import java.net.URI
 import kotlin.reflect.KClass
@@ -33,6 +36,9 @@ class DocumentRoot internal constructor() {
 
     fun errorDocument(populator: ErrorDocumentPopulator):
         ErrorDocument = MutableErrorDocument().apply(populator)
+
+    fun metaDocument(populator: DocumentPopulator):
+        Document = MutableDocument().apply(populator)
 }
 
 @JsonApiDsl
@@ -77,48 +83,26 @@ class MutableErrorDocument internal constructor() : MutableDocument(), ErrorDocu
 private typealias ErrorDocumentPopulator = MutableErrorDocument.() -> Unit
 
 @JsonApiDsl
-abstract class MutableDocument protected constructor() : Document {
+open class MutableDocument internal constructor() : Document {
 
-    final override var links: MutableLinks? = null
+    final override var meta: MutableMeta? = null
         private set
-
-    fun links(populator: LinksPopulator) {
-        links = (links ?: MutableLinks()).apply(populator)
-    }
-}
-
-@JsonApiDsl
-class MutableResource<T : Any> internal constructor(type: KClass<T>) : Resource<T> {
-
-    override val type: String = type.java.simpleName.decapitalize()
-    override lateinit var id: String
-    override var attributes: T? = null
-    override var meta: MutableMeta? = null
-        private set
-    override var links: MutableLinks? = null
+    final override var links: MutableDocumentLinks? = null
         private set
 
     fun meta(populator: MetaPopulator) {
         meta = (meta ?: MutableMeta()).apply(populator)
     }
 
-    fun links(populator: LinksPopulator) {
-        links = (links ?: MutableLinks()).apply(populator)
+    fun links(populator: DocumentLinksPopulator) {
+        links = (links ?: MutableDocumentLinks()).apply(populator)
     }
 }
 
-private typealias ResourcePopulator<T> = MutableResource<T>.() -> Unit
+private typealias DocumentPopulator = MutableDocument.() -> Unit
 
 @JsonApiDsl
-class MutableError internal constructor() : Error {
-
-    override var title: String? = null
-}
-
-private typealias ErrorPopulator = MutableError.() -> Unit
-
-@JsonApiDsl
-class MutableLinks internal constructor() : Links {
+class MutableDocumentLinks internal constructor() : DocumentLinks {
 
     override lateinit var self: URI
     override var related: URI? = null
@@ -128,7 +112,84 @@ class MutableLinks internal constructor() : Links {
     override var last: URI? = null
 }
 
-private typealias LinksPopulator = MutableLinks.() -> Unit
+private typealias DocumentLinksPopulator = MutableDocumentLinks.() -> Unit
+
+@JsonApiDsl
+class MutableResource<T : Any> internal constructor(type: KClass<T>) : Resource<T> {
+
+    override val type: String = type.java.simpleName.decapitalize()
+    override lateinit var id: String
+    override var attributes: T? = null
+    override var meta: MutableMeta? = null
+        private set
+    override var links: MutableResourceLinks? = null
+        private set
+
+    fun meta(populator: MetaPopulator) {
+        meta = (meta ?: MutableMeta()).apply(populator)
+    }
+
+    fun links(populator: ResourceLinksPopulator) {
+        links = (links ?: MutableResourceLinks()).apply(populator)
+    }
+}
+
+private typealias ResourcePopulator<T> = MutableResource<T>.() -> Unit
+
+@JsonApiDsl
+class MutableResourceLinks internal constructor() : ResourceLinks {
+
+    override lateinit var self: URI
+}
+
+private typealias ResourceLinksPopulator = MutableResourceLinks.() -> Unit
+
+@JsonApiDsl
+class MutableError internal constructor() : Error {
+
+    override var id: String? = null
+    override var status: Int? = null
+    override var code: String? = null
+    override var title: String? = null
+    override var detail: String? = null
+    override var source: MutableErrorSource? = null
+        private set
+    override var meta: MutableMeta? = null
+        private set
+    override var links: MutableErrorLinks? = null
+        private set
+
+    fun source(populator: ErrorSourcePopulator) {
+        source = (source ?: MutableErrorSource()).apply(populator)
+    }
+
+    fun meta(populator: MetaPopulator) {
+        meta = (meta ?: MutableMeta()).apply(populator)
+    }
+
+    fun links(populator: ErrorLinksPopulator) {
+        links = (links ?: MutableErrorLinks()).apply(populator)
+    }
+}
+
+private typealias ErrorPopulator = MutableError.() -> Unit
+
+@JsonApiDsl
+class MutableErrorSource internal constructor() : ErrorSource {
+
+    override var pointer: String? = null
+    override var parameter: String? = null
+}
+
+private typealias ErrorSourcePopulator = MutableErrorSource.() -> Unit
+
+@JsonApiDsl
+class MutableErrorLinks internal constructor() : ErrorLinks {
+
+    override lateinit var about: URI
+}
+
+private typealias ErrorLinksPopulator = MutableErrorLinks.() -> Unit
 
 @JsonApiDsl
 class MutableMeta internal constructor() : MutableMap<String, Any> by mutableMapOf(), Meta {
