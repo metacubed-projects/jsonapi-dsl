@@ -1,7 +1,10 @@
 ### Build
-gradlew
-gradlew.bat
-gradle/
-.gradle/
-**/build/
-**/out/
+mvnw
+mvnw.cmd
+.mvn/
+!.mvn/extensions.xml
+**/target/
+
+### IDE
+*.iml
+**/.idea/

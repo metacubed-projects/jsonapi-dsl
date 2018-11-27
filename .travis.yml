@@ -8,20 +8,13 @@ branches:
     - gh-pages
 
 before_install:
-  - touch tempfile
-  - gradle -b tempfile wrapper --gradle-version 4.10.1
-  - rm tempfile
+    - mvn -s .travis.settings.xml -N io.takari:maven:wrapper -Dmaven=3.6.0
 
 install: true
 
 script:
-  - ./gradlew clean build
-
-before_cache:
-  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+    - ./mvnw -s .travis.settings.xml clean install
 
 cache:
   directories:
-    - $HOME/.gradle/caches/
-    - $HOME/.gradle/wrapper/
+      - $HOME/.m2
